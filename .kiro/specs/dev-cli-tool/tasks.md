@@ -76,6 +76,7 @@ This implementation plan breaks down the dev.sh CLI tool into discrete, actionab
   - Construct container_image variable as "${APP}:${VERSION}"
   - Display informational message about provisioning
   - Change to infrastructure directory using cd
+  - Run terraform init (call error_exit if it fails)
   - Create or select terraform workspace (try select first, create if fails)
   - Run terraform apply with -var flags for environment, app_version, and container_image
   - Return to original directory using cd -
@@ -89,6 +90,7 @@ This implementation plan breaks down the dev.sh CLI tool into discrete, actionab
   - Construct container_image variable as "${APP}:${VERSION}"
   - Display informational message about destroying
   - Change to infrastructure directory using cd
+  - Run terraform init (call error_exit if it fails)
   - Select terraform workspace (call error_exit if workspace doesn't exist)
   - Run terraform destroy with -var flags for environment, app_version, and container_image
   - Return to original directory using cd -

@@ -203,6 +203,9 @@ cmd_up() {
     
     cd "$infra_path" || error_exit "Failed to change to infrastructure directory"
     
+    # Initialize terraform
+    terraform init || error_exit "Terraform init failed"
+    
     # Create or select workspace
     terraform workspace select "$VERSION" 2>/dev/null || terraform workspace new "$VERSION"
     
@@ -230,6 +233,9 @@ cmd_down() {
     echo "Destroying infrastructure for ${APP} version ${VERSION} in ${ENVIRONMENT}..."
     
     cd "$infra_path" || error_exit "Failed to change to infrastructure directory"
+    
+    # Initialize terraform
+    terraform init || error_exit "Terraform init failed"
     
     # Select workspace
     terraform workspace select "$VERSION" || error_exit "Workspace $VERSION not found"
