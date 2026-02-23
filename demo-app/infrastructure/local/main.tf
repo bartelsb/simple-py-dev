@@ -1,7 +1,7 @@
 module "demo-app" {
   source = "../modules/demo-app"
 
-  environment = "local"
-  app_version = terraform.workspace
-  container_image = "demo-app:${terraform.workspace}"
+  environment = var.environment
+  app_version = var.app_version
+  container_image = var.container_image
 }
