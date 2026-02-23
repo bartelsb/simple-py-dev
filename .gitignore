@@ -1,2 +1,6 @@
-demo-app/venv
-demo-app/__pycache__
+demo-app/src/venv
+demo-app/src/__pycache__
+demo-app/infrastructure/*/.terraform/
+demo-app/infrastructure/*/tfplan.out
+demo-app/infrastructure/*/terraform.tfstate
+demo-app/infrastructure/*/.terraform.tfstate.lock.info

@@ -10,7 +10,7 @@ A simple Flask web application with basic health check and version endpoints.
 - `GET /version` - Returns the application version
   - Response: The value of the `APP_VERSION` environment variable, or `"unknown"` if not set
 
-## Running the App
+## Running the App Locally
 
 ```bash
 # Install dependencies
@@ -19,6 +19,10 @@ pip install -r requirements.txt
 # Run the server
 flask --app server run
 ```
+
+## Running the App in Kubernetes
+
+
 
 ## Adding More Routes
 
