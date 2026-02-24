@@ -69,7 +69,7 @@ resource "kubernetes_deployment_v1" "demo_app" {
           liveness_probe {
             http_get {
               path = "/healthz"
-              port = 8080
+              port = 5000
             }
             initial_delay_seconds = 10
             period_seconds        = 10
@@ -78,7 +78,7 @@ resource "kubernetes_deployment_v1" "demo_app" {
           readiness_probe {
             http_get {
               path = "/healthz"
-              port = 8080
+              port = 5000
             }
             initial_delay_seconds = 5
             period_seconds        = 5

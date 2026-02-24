@@ -17,7 +17,7 @@ variable "container_image" {
 variable "container_port" {
   type        = number
   description = "Port on which to expose the application"
-  default     = 8080
+  default     = 5000
 }
 
 variable "replica_count" {
