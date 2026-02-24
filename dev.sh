@@ -63,22 +63,18 @@ is_deployed() {
 
 # Get port-forward info for deployed version
 get_port_forward_info() {
-    local namespace=$(get_namespace)
-    # Find active port-forward process and extract local port
-    local pf_line=$(ps aux | grep "kubectl.*port-forward.*$namespace" | grep -v grep | head -n 1)
-    
-    if [ -z "$pf_line" ]; then
-        echo ""
-        return
-    fi
-    
-    # Extract local port from command line (format: kubectl port-forward ... 2717:8080)
-    local port_mapping=$(echo "$pf_line" | grep -oP '\d+:\d+' | head -n 1)
-    local local_port=$(echo "$port_mapping" | cut -d: -f1)
-    
-    if [ -n "$local_port" ]; then
-        echo "http://localhost:${local_port}"
-    fi
+    local namespace
+    namespace=$(get_namespace)
+
+    local pf_line
+    pf_line=$(ps aux | grep "[k]ubectl.*port-forward.*${namespace}" | head -n 1)
+
+    [[ -z "$pf_line" ]] && return
+
+    local port_mapping="${pf_line##* }"
+    local local_port="${port_mapping%%:*}"
+
+    [[ -n "$local_port" ]] && echo "http://localhost:${local_port}"
 }
 # Command: up - Provision infrastructure
 cmd_up() {
@@ -267,7 +263,7 @@ cmd_expose() {
     echo "Setting up port-forwarding for ${APP} version ${VERSION}..."
     echo "Access the application at: http://localhost:${port}"
     
-    kubectl port-forward -n "$namespace" "svc/${APP}" "${port}:80"
+    kubectl port-forward -n "$namespace" "svc/${APP}" "${port}:5000"
 }
 
 # Display help text
