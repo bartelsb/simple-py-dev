@@ -160,7 +160,7 @@ cmd_build() {
     local image_name="${APP}:${VERSION}"
     
     echo "Building Docker image: $image_name"
-    docker build -t "$image_name" -f "$dockerfile" "${APP}/src" \
+    docker build -e "APP_VERSION=${TAG}" -t "$image_name" -f "$dockerfile" "${APP}/src" \
         || error_exit "Docker build failed"
     
     echo "Image built successfully: $image_name"
