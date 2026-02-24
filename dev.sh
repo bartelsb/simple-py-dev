@@ -276,14 +276,13 @@ Usage: dev.sh [global options] <command> [command options]
 Global Options:
   -a, --app <app>           Specify application (default: demo-app)
   -e, --environment <env>   Specify environment (default: local)
-  -v, --version <version>   Specify version/workspace name
+  -v, --version <version>   Specify tag/version/workspace name
   -h, --help                Show this help text
 
 Commands:
   up                        Provision infrastructure with terraform apply
   down                      Destroy infrastructure with terraform destroy
   build                     Build Docker image
-    -v, --version <tag>     Tag for the image (default: latest git commit hash)
     -d, --deploy            Build and deploy in one step
   versions                  List all versions and their deployment status
   logs                      Show logs for a version
