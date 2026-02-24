@@ -95,8 +95,8 @@ resource "kubernetes_deployment_v1" "demo_app" {
 
 resource "kubernetes_service_v1" "demo_app" {
   metadata {
-    name      = "${local.default_name_with_version}-svc"
-    namespace = kubernetes_namespace.demo_app.metadata[0].name
+    name      = "${local.default_name}"
+    namespace = kubernetes_namespace_v1.demo_app.metadata[0].name
     labels = {
       app = local.default_name
     }
