@@ -30,42 +30,13 @@ validate_tools() {
         error_exit "Missing required tools: ${missing_tools[*]}"
     fi
 }
-# Argument parsing function
-parse_global_args() {
-    APP="$DEFAULT_APP"
-    ENVIRONMENT="$DEFAULT_ENV"
-    VERSION=""
-    
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            -a|--app)
-                APP="$2"
-                shift 2
-                ;;
-            -e|--environment)
-                ENVIRONMENT="$2"
-                shift 2
-                ;;
-            -v|--version)
-                VERSION="$2"
-                shift 2
-                ;;
-            -h|--help)
-                show_help
-                exit 0
-                ;;
-            *)
-                # Not a global option, stop parsing
-                break
-                ;;
-        esac
-    done
-}
 # Prompt for version if not set
 prompt_version() {
     if [ -z "$VERSION" ]; then
         read -p "Enter version name: " VERSION
-        [ -z "$VERSION" ] && error_exit "Version is required"
+    fi
+    if [ -z "$VERSION" ]; then
+      error_exit "Version is required"
     fi
 }
 # Get infrastructure path
@@ -128,6 +99,7 @@ cmd_up() {
     
     # Run terraform apply
     terraform apply \
+        -auto-approve \
         -var="environment=${ENVIRONMENT}" \
         -var="app_version=${VERSION}" \
         -var="container_image=${container_image}" \
@@ -155,6 +127,7 @@ cmd_down() {
     
     # Run terraform destroy
     terraform destroy \
+        -auto-approve \
         -var="environment=${ENVIRONMENT}" \
         -var="app_version=${VERSION}" \
         -var="container_image=${container_image}" \
@@ -165,16 +138,11 @@ cmd_down() {
 }
 # Command: build - Build Docker image
 cmd_build() {
-    local tag=""
     local deploy=false
     
     # Parse command-specific options
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            -t|--tag)
-                tag="$2"
-                shift 2
-                ;;
             -d|--deploy)
                 deploy=true
                 shift
@@ -186,14 +154,14 @@ cmd_build() {
     done
     
     # Default tag to git hash if not specified
-    if [ -z "$tag" ]; then
-        tag=$(get_git_hash)
+    if [ -z "$VERSION" ]; then
+        VERSION=$(get_git_hash)
     fi
     
     local dockerfile="${APP}/src/Dockerfile"
     [ -f "$dockerfile" ] || error_exit "Dockerfile not found: $dockerfile"
     
-    local image_name="${APP}:${tag}"
+    local image_name="${APP}:${VERSION}"
     
     echo "Building Docker image: $image_name"
     docker build -t "$image_name" -f "$dockerfile" "${APP}/src" \
@@ -203,7 +171,6 @@ cmd_build() {
     
     if [ "$deploy" = true ]; then
         echo "Deploying built image..."
-        VERSION="$tag"
         cmd_up
     fi
 }
@@ -320,7 +287,7 @@ Commands:
   up                        Provision infrastructure with terraform apply
   down                      Destroy infrastructure with terraform destroy
   build                     Build Docker image
-    -t, --tag <tag>         Tag for the image (default: latest git commit hash)
+    -v, --version <tag>     Tag for the image (default: latest git commit hash)
     -d, --deploy            Build and deploy in one step
   versions                  List all versions and their deployment status
   logs                      Show logs for a version
@@ -329,69 +296,77 @@ Commands:
     -p, --port <port>       Port to forward (required)
 
 Examples:
-  dev.sh up -v v1.0.0
-  dev.sh build -t v1.0.0 -d
-  dev.sh logs -v v1.0.0 -f
-  dev.sh expose -v v1.0.0 -p 8080
+  dev.sh -v v1.0.0 up
+  dev.sh -v v1.0.0 build -d
+  dev.sh -v v1.0.0 logs -f
+  dev.sh -v v1.0.0 expose -p 8080
   dev.sh versions
-  dev.sh down -v v1.0.0
+  dev.sh -v v1.0.0 down
 EOF
 }
 
 # Main entry point and command dispatcher
 main() {
     validate_tools
-    
-    # Parse global options and track position
-    local -a all_args=("$@")
-    local idx=0
 
     # Use minikube Docker daemon
-    eval $(minikube docker-env)
+    eval "$(minikube docker-env)"
 
     APP="$DEFAULT_APP"
     ENVIRONMENT="$DEFAULT_ENV"
     VERSION=""
-    
-    while [[ $idx -lt ${#all_args[@]} ]]; do
-        case "${all_args[$idx]}" in
+
+    # Parse global options
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
             -a|--app)
-                APP="${all_args[$((idx+1))]}"
-                idx=$((idx+2))
+                [[ $# -lt 2 ]] && error_exit "Missing value for $1"
+                APP="$2"
+                shift 2
                 ;;
             -e|--environment)
-                ENVIRONMENT="${all_args[$((idx+1))]}"
-                idx=$((idx+2))
+                [[ $# -lt 2 ]] && error_exit "Missing value for $1"
+                ENVIRONMENT="$2"
+                shift 2
                 ;;
             -v|--version)
-                VERSION="${all_args[$((idx+1))]}"
-                idx=$((idx+2))
+                [[ $# -lt 2 ]] && error_exit "Missing value for $1"
+                VERSION="$2"
+                shift 2
                 ;;
             -h|--help)
                 show_help
                 exit 0
                 ;;
-            *)
-                # Not a global option, this is the command
+            --) # Explicit end of options
+                shift
                 break
+                ;;
+            -*)
+                error_exit "Unknown global option: $1"
+                ;;
+            *)
+                break  # First non-flag = command
                 ;;
         esac
     done
-    
-    # Extract command and remaining arguments
-    local command="${all_args[$idx]:-}"
-    local -a cmd_args=("${all_args[@]:$((idx+1))}")
-    
+
+    # Now $1 is the command
+    local command="${1:-}"
+
+    # Remove command from args
+    [[ $# -gt 0 ]] && shift
+
     case "$command" in
-        up) cmd_up "${cmd_args[@]}" ;;
-        down) cmd_down "${cmd_args[@]}" ;;
-        build) cmd_build "${cmd_args[@]}" ;;
-        versions) cmd_versions "${cmd_args[@]}" ;;
-        logs) cmd_logs "${cmd_args[@]}" ;;
-        expose) cmd_expose "${cmd_args[@]}" ;;
-        help) show_help ;;
-        "") error_exit "No command specified. Use --help for usage." ;;
-        *) error_exit "Unknown command: $command" ;;
+        up)       cmd_up "$@" ;;
+        down)     cmd_down "$@" ;;
+        build)    cmd_build "$@" ;;
+        versions) cmd_versions "$@" ;;
+        logs)     cmd_logs "$@" ;;
+        expose)   cmd_expose "$@" ;;
+        help)     show_help ;;
+        "")       error_exit "No command specified. Use --help for usage." ;;
+        *)        error_exit "Unknown command: $command" ;;
     esac
 }
 

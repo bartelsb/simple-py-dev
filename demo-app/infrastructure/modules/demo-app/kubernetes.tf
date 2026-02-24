@@ -3,7 +3,7 @@ locals {
     default_name_with_version = "demo-app-${var.app_version}"
 }
 
-resource "kubernetes_namespace_v1" "app_namespace" {
+resource "kubernetes_namespace_v1" "demo_app" {
   metadata {
     name = local.default_name_with_version
   }
@@ -12,7 +12,7 @@ resource "kubernetes_namespace_v1" "app_namespace" {
 resource "kubernetes_deployment_v1" "demo_app" {
   metadata {
     name      = local.default_name_with_version
-    namespace = kubernetes_namespace_v1.app_namespace.metadata[0].name
+    namespace = kubernetes_namespace_v1.demo_app.metadata[0].name
     labels = {
       app         = local.default_name
       environment = var.environment
@@ -90,5 +90,27 @@ resource "kubernetes_deployment_v1" "demo_app" {
         }
       }
     }
+  }
+}
+
+resource "kubernetes_service_v1" "demo_app" {
+  metadata {
+    name      = "${local.default_name_with_version}-svc"
+    namespace = kubernetes_namespace.demo_app.metadata[0].name
+    labels = {
+      app = local.default_name
+    }
+  }
+
+  spec {
+    selector = {
+      app = local.default_name
+    }
+    port {
+      port        = 5000
+      target_port = 5000
+      protocol    = "TCP"
+    }
+    type = "ClusterIP"
   }
 }

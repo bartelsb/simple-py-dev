@@ -13,3 +13,7 @@ A simple Flask web application with basic health check and version endpoints. Se
 ## Local application deployment
 
 *IMPORTANT:* Confirm that the current-context in your kubeconfig file (likely, ~/.kube/config) is set to the correct context. The [dev.sh](dev.sh) script will use the currently configured context. If you have multiple contexts configured it can be easy to deploy to the wrong cluster, so this is a step that should not be skipped.
+
+## TODO
+
+- More flexible argument parsing to script. Right now, it can't handle global parameters after the command. Consider getopts.
