@@ -85,7 +85,6 @@ resource "kubernetes_deployment_v1" "demo_app" {
           }
 
           security_context {
-            run_as_non_root           = true
             read_only_root_filesystem = true
           }  
         }

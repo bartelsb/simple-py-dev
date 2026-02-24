@@ -345,7 +345,10 @@ main() {
     # Parse global options and track position
     local -a all_args=("$@")
     local idx=0
-    
+
+    # Use minikube Docker daemon
+    eval $(minikube docker-env)
+
     APP="$DEFAULT_APP"
     ENVIRONMENT="$DEFAULT_ENV"
     VERSION=""
